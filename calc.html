@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="coinageApp">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Coinage v1.0</title>
+    <link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <style>
+   		/*[class*="col-"] {
+   			border:1px solid red;
+   		}*/
+
+      @media (min-width: 768px) {
+        .container {
+          width:750px;
+          margin-top:20px;
+        }
+      }
+
+      .coinage {
+        border:1px solid #c0c0c0;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="container coinage" ng-controller="mainController">
+        <div class="row">
+	        <div class="col-xs-12 col-md-12"><h1>Coinage v1.0</h1></div>
+	    </div>
+	    <div class="row">
+        <form>
+	        <div class="col-xs-6 col-sm-6 col-md-6">Enter monetary value for coin conversion.</div>
+	        <div class="col-xs-3 col-sm-4 col-md-4"><input type="text" ng-model="coin.inputValue"></div>
+	        <div class="col-xs-3 col-sm-2 col-md-2"><input type="submit" value="Convert" ng-click="calculate()"></div>
+        </form>
+	    </div>
+	    <div class="row center-block">
+        <div class="col-xs-12 col-sm-12 col-md-12 text-center">Converting <span ng-bind="coin.inputValue"></span> pennies into coins.</div>
+        <div class="col-xs-6 col-sm-6 col-md-6 text-left"><strong>Coin</strong></div>
+        <div class="col-xs-6 col-sm-6 col-md-6 text-right"><strong>Amount</strong></div>
+        
+        <div class="col-xs-6 col-sm-6 col-md-6 text-left">1p</div>
+        <div class="col-xs-6 col-sm-6 col-md-6 text-right"><span ng-bind="coin.onePenny">0</span></div>
+        
+        <div class="col-xs-6 col-sm-6 col-md-6 text-left">2p</div>
+        <div class="col-xs-6 col-sm-6 col-md-6 text-right"><span ng-bind="coin.twoPenny">0</span></div>
+
+        <div class="col-xs-6 col-sm-6 col-md-6 text-left">50p</div>
+        <div class="col-xs-6 col-sm-6 col-md-6 text-right"><span ng-bind="coin.fiftyPenny">0</span></div>
+
+        <div class="col-xs-6 col-sm-6 col-md-6 text-left">£1</div>
+        <div class="col-xs-6 col-sm-6 col-md-6 text-right"><span ng-bind="coin.oneHundredPenny">0</span></div>
+
+        <div class="col-xs-6 col-sm-6 col-md-6 text-left">£2</div>
+        <div class="col-xs-6 col-sm-6 col-md-6 text-right"><span ng-bind="coin.twoHundredPenny">0</span></div>
+        
+        
+	    </div>
+
+      <div class="row">
+        <div class="col-xs-12 text-center">&copy; Coinage 2014</div>
+      </div>
+	</div>
+    
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="bower_components/angularjs/angular.min.js"></script>
+    <script>
+      var coinageApp = angular.module('coinageApp', []).controller('mainController', function ($scope) {
+        $scope.coin = {
+          onePenny:0,
+          twoPenny:0,
+          fiftyPenny:0,
+          oneHundredPenny:0,
+          twoHundredPenny:0,
+          inputValue:0,
+          convertedValue:0
+        };
+
+        $scope.processCurrency = function () {
+          var coin = $scope.coin;
+              inputValue = Number(coin.inputValue.replace(/[^0-9\.]+/g,""));
+
+          if (coin.inputValue % 1 != 0) {
+            coin.convertedValue = Math.round(inputValue * 100);
+          } else {
+            coin.convertedValue = inputValue;
+          }
+
+          this.balanceCurrency();
+        };
+
+        $scope.reset = function () {
+          var coinObj = $scope.coin;
+          
+          for (var a in coinObj) {
+            if (a != 'inputValue') {
+              coinObj[a] = 0;
+            }
+          }
+        };
+
+        $scope.balanceCurrency = function () {
+          var amount = $scope.coin.convertedValue,
+              coin = $scope.coin,
+              changeArray = [200, 100, 50, 2, 1],
+              coinMapper = {
+                '1': 'onePenny',
+                '2': 'twoPenny',
+                '50': 'fiftyPenny',
+                '100': 'oneHundredPenny',
+                '200': 'twoHundredPenny'
+              },
+              balance = amount,
+              dollars = Math.floor(amount / 100),
+              cents = (amount % 100);
+
+          for (var i = 0, len = 2; i < len; ++i) {
+            if (dollars > 0 && balance >= changeArray[i]) {
+              coin[coinMapper[changeArray[i]]] = Math.floor(balance / changeArray[i]);
+              dollars = dollars - (dollars % changeArray[i]);
+            }
+          }
+
+          for (var i = 2, len = changeArray.length; i < len; ++i) {
+            if (cents > 0) {
+              if (cents >= changeArray[i]) {
+                coin[coinMapper[changeArray[i]]] = Math.floor(cents / changeArray[i]);
+                cents = (cents % changeArray[i]);
+              }
+            }
+          }
+        };
+        
+        $scope.calculate = function () {
+          this.reset();
+          this.processCurrency();
+        };
+
+      });
+      
+    </script>
+    
+  </body>
+</html>
